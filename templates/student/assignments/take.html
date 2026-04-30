@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Take Assignment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-1">{{ assignment.title }}</h3>
+            <p class="text-muted mb-0">{{ assignment.description }}</p>
+        </div>
+        <a href="{% url 'students:assignment_list' %}" class="btn btn-outline-secondary">Back to Assignments</a>
+    </div>
+
+    <form id="assignment-form" method="post" action="{% url 'students:assignment_take' assignment.id %}">
+        {% csrf_token %}
+        {% for item in question_payload %}
+        {% with question=item.question answer=item.answer selected_ids=item.selected_ids %}
+        <div class="card mb-3 shadow-sm border-0 question-card" data-question-id="{{ question.id }}" data-question-type="{{ question.question_type }}">
+            <div class="card-body">
+                <h5 class="mb-2">Q{{ forloop.counter }}. {{ question.question_text }}</h5>
+                <p class="small text-muted mb-3">Topic: {{ question.topic }} | Marks: {{ question.marks }}</p>
+
+                {% if question.question_type == 'multiple' %}
+                <div class="alert alert-warning py-2 small">
+                    ⚠️ This question has multiple correct answers. Select all that apply.
+                </div>
+                {% for option in question.options.all %}
+                <div class="form-check mb-1">
+                    <input class="form-check-input question-input" type="checkbox" name="question_{{ question.id }}"
+                           id="q{{ question.id }}_opt{{ option.id }}" value="{{ option.id }}"
+                           {% if option.id in selected_ids %}checked{% endif %}>
+                    <label class="form-check-label" for="q{{ question.id }}_opt{{ option.id }}">{{ option.option_text }}</label>
+                </div>
+                {% endfor %}
+                {% elif question.question_type == 'single' %}
+                {% for option in question.options.all %}
+                <div class="form-check mb-1">
+                    <input class="form-check-input question-input" type="radio" name="question_{{ question.id }}"
+                           id="q{{ question.id }}_opt{{ option.id }}" value="{{ option.id }}"
+                           {% if option.id in selected_ids %}checked{% endif %}>
+                    <label class="form-check-label" for="q{{ question.id }}_opt{{ option.id }}">{{ option.option_text }}</label>
+                </div>
+                {% endfor %}
+                {% else %}
+                <textarea class="form-control question-input" rows="4" name="question_{{ question.id }}"
+                          placeholder="Enter your answer...">{{ answer.text_answer|default:'' }}</textarea>
+                {% endif %}
+                <div class="invalid-feedback d-block mt-2 question-error" style="display:none !important;"></div>
+            </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="alert alert-info">No questions have been configured for this assignment yet.</div>
+        {% endfor %}
+
+        {% if question_payload %}
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-outline-primary">Save Progress</button>
+            <button type="submit" formaction="{% url 'students:assignment_submit' assignment.id %}" class="btn btn-success" id="submit-assignment-btn">
+                Submit Assignment
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const form = document.getElementById('assignment-form');
+    if (!form) return;
+
+    function validateQuestion(card) {
+        const type = card.dataset.questionType;
+        const questionId = card.dataset.questionId;
+        const errorEl = card.querySelector('.question-error');
+        let valid = true;
+
+        if (type === 'text') {
+            const field = card.querySelector('textarea[name="question_' + questionId + '"]');
+            valid = field && field.value.trim().length > 0;
+        } else if (type === 'single') {
+            valid = !!card.querySelector('input[name="question_' + questionId + '"]:checked');
+        } else {
+            valid = card.querySelectorAll('input[name="question_' + questionId + '"]:checked').length > 0;
+        }
+
+        if (!valid) {
+            errorEl.textContent = 'Please provide at least one answer before submitting.';
+            errorEl.style.display = 'block';
+        } else {
+            errorEl.textContent = '';
+            errorEl.style.display = 'none';
+        }
+        return valid;
+    }
+
+    document.getElementById('submit-assignment-btn')?.addEventListener('click', function (event) {
+        const cards = Array.from(document.querySelectorAll('.question-card'));
+        const allValid = cards.every(validateQuestion);
+        if (!allValid) {
+            event.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+})();
+</script>
+{% endblock %}

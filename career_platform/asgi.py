@@ -1,20 +1,23 @@
-"""
-ASGI config for career_platform project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
-"""
-
 import os
 
 from django.core.asgi import get_asgi_application
 
-environment = os.environ.get('ENVIRONMENT', 'local')
-if environment == 'production':
-	os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'career_platform.settings.production')
-else:
-	os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'career_platform.settings.local')
+environment = os.environ.get("ENVIRONMENT", "local").lower()
+settings_module = "config.settings.production" if environment == "production" else "config.settings.local"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
 
-application = get_asgi_application()
+django_asgi_app = get_asgi_application()
+
+try:
+    from channels.auth import AuthMiddlewareStack
+    from channels.routing import ProtocolTypeRouter, URLRouter
+    from routing import routing
+
+    application = ProtocolTypeRouter(
+        {
+            "http": django_asgi_app,
+            "websocket": AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns)),
+        }
+    )
+except ImportError:
+    application = django_asgi_app

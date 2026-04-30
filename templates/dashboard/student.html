@@ -146,6 +146,9 @@
                         <a href="{% url 'assessments:start' %}" class="btn btn-primary">
                             <i class="bi bi-clipboard-check me-2"></i>New Assessment
                         </a>
+                        <a href="{% url 'students:assignment_list' %}" class="btn btn-outline-success">
+                            <i class="bi bi-journal-check me-2"></i>Assignments
+                        </a>
                         <a href="{% url 'appointments:book' %}" class="btn btn-outline-primary">
                             <i class="bi bi-calendar-plus me-2"></i>Book Session
                         </a>
@@ -208,6 +211,10 @@
 <script>
 (function () {
     const endpoint = "{% url 'dashboard:student_data' %}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const studentSocket = new WebSocket(
+        protocol + window.location.host + '/ws/student/{{ request.user.id }}/'
+    );
 
     const assessmentsEl = document.getElementById('student-total-assessments');
     const recsEl = document.getElementById('student-total-recommendations');
@@ -332,6 +339,13 @@
             </div>
         `;
     }
+
+    studentSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'counselor_message' || data.type === 'session_scheduled') {
+            refreshDashboard();
+        }
+    };
 
     async function refreshDashboard() {
         try {

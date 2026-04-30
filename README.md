@@ -1,175 +1,84 @@
-# 🎓 Career Guidance & Counseling Platform
+# CareerPath Pro
 
-A full-stack Django web application that helps students discover career paths through AI-powered assessments, expert counseling sessions, and personalized recommendations.
+CareerPath Pro is a Django-based counseling platform with role-based dashboards for students, counselors, and admins.
 
----
+## Core Features
+- Authentication with role-based access (`student`, `counselor`, `admin`)
+- Career assessment + recommendations
+- Appointment booking and counselor management
+- Chat between students and counselors
+- Student assignment engine with auto-grading and topic analysis
+- Real-time counselor updates (Django Channels + WebSocket)
 
-## 🚀 Quick Start (Local)
+## New Assignment Workflow
+- `GET /student/assignments/` - list active assignments
+- `GET /student/assignments/<id>/start/` - create/resume submission
+- `GET|POST /student/assignments/<id>/take/` - answer questions and save progress
+- `POST /student/assignments/<id>/submit/` - submit, auto-grade, generate topic analysis
+- `GET /student/assignments/<id>/result/` - score card, grade, chart, topic strengths, answer review
 
-### 0. Create .env
+## Real-Time Counselor Sync
+- `POST /student/select-counselor/<counselor_id>/` assigns counselor to student
+- Counselor socket endpoint: `/ws/counselor/<counselor_id>/`
+- Student socket endpoint: `/ws/student/<student_id>/`
+- Live events:
+  - `student_assigned`
+  - `assignment_submitted`
+  - `student_profile_update`
+
+## Settings Structure
+The project now uses split settings under `config/settings/`:
+- `config/settings/base.py`
+- `config/settings/local.py` (DEBUG=True, SQLite)
+- `config/settings/production.py` (DEBUG=False, MySQL, WhiteNoise, Redis channel layer)
+
+`manage.py` selects settings by `ENVIRONMENT` (`local` or `production`).
+`career_platform/wsgi.py` points to `config.settings.production` for PythonAnywhere deployment.
+
+## Local Setup
+1. Create env file:
 ```bash
 copy .env.example .env
 ```
-
-Set these for local use:
-```
-ENVIRONMENT=local
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
-```
-
-### 1. Install Dependencies
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
-### 2. Run Migrations
+3. Run migrations:
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
-
-### 3. Seed Assessment Questions
-```bash
-python manage.py seed_assessment_questions
-```
-
-### 4. Create Superuser (optional — already seeded below)
-```bash
-python manage.py createsuperuser
-```
-
-### 5. Run Server
+4. Start server:
 ```bash
 python manage.py runserver
 ```
 
-Visit: **http://127.0.0.1:8000/**
-
----
-
-## 👤 Demo Accounts
-
-| Role       | Username      | Password       | Dashboard URL                  |
-|------------|---------------|----------------|-------------------------------|
-| Admin      | `admin`       | `Admin@1234`   | http://127.0.0.1:8000/dashboard/admin/ |
-| Student    | `student1`    | `Student@1234` | http://127.0.0.1:8000/dashboard/student/ |
-| Counselor  | `counselor1`  | `Counsel@1234` | http://127.0.0.1:8000/dashboard/counselor/ |
-| Django Admin | `admin`     | `Admin@1234`   | http://127.0.0.1:8000/admin/ |
-
----
-
-## 📁 Project Structure
-
-```
-career_platform/          ← Django project settings & URLs
-users/                    ← CustomUser, StudentProfile, CounselorProfile
-assessments/              ← MCQ Questions, Assessment Results
-appointments/             ← Appointment booking, Feedback
-recommendations/          ← AI-based Career Recommendations + Engine
-chat/                     ← Real-time AJAX chat system
-dashboard/                ← Role dashboards, Resume Builder
-templates/                ← All HTML templates (Bootstrap 5)
-static/css/               ← Custom CSS styles
-```
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🔐 Authentication | Register, Login, Logout with role-based access |
-| 📋 Career Assessment | 15 MCQ questions (Aptitude, Interest, Personality) |
-| 🤖 AI Recommendations | Rule-based engine maps scores to career paths |
-| 🗓️ Appointment Booking | Students book sessions, counselors confirm/reject |
-| 💬 Chat System | AJAX-based real-time messaging with polling |
-| 📄 Resume Builder | Dynamic form with Education & Experience sections |
-| ⭐ Feedback System | Students rate completed counseling sessions |
-| 📊 Admin Dashboard | Analytics: users, appointments, top careers |
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend**: Python 3.12, Django 6.0
-- **Frontend**: Bootstrap 5, Bootstrap Icons, Vanilla JavaScript
-- **Database**: SQLite (local), MySQL (production)
-- **Auth**: Django built-in auth with custom `AbstractUser`
-
----
-
-## 🔗 Key URLs
-
-| URL | Description |
-|-----|-------------|
-| `/` | Landing / Home page |
-| `/users/register/` | Student & Counselor registration |
-| `/users/login/` | Login page |
-| `/dashboard/` | Auto-redirects by role |
-| `/assessments/` | Assessment start page |
-| `/assessments/take/` | Take the MCQ test |
-| `/recommendations/` | Career recommendations list |
-| `/appointments/book/` | Book a counseling session |
-| `/appointments/my/` | Student's appointments |
-| `/appointments/manage/` | Counselor's appointment management |
-| `/chat/` | Messages inbox |
-| `/dashboard/resume/builder/` | Resume builder |
-| `/dashboard/resume/preview/` | Resume preview & print |
-| `/admin/` | Django admin panel |
-
----
-
-## ⚙️ Settings & Environments
-
-This project uses split settings:
-
-- `career_platform/settings/base.py`
-- `career_platform/settings/local.py`
-- `career_platform/settings/production.py`
-
-The settings module is selected via `ENVIRONMENT` in `.env`.
-
----
-
-## 🚀 PythonAnywhere Deployment (MySQL)
-
-### 1. Create MySQL Database
-Create a database named `pathpro` in PythonAnywhere.
-
-### 2. Configure .env on PythonAnywhere
-```env
-ENVIRONMENT=production
-DEBUG=False
-SECRET_KEY=your-production-secret-key
-ALLOWED_HOSTS=yourusername.pythonanywhere.com
-DATABASE_URL=mysql://pathpro:your_password@127.0.0.1:3306/pathpro
-```
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Migrate + Static
+## Production Notes (PythonAnywhere + MySQL)
+1. Set `ENVIRONMENT=production` in `.env`
+2. Fill all DB keys from `.env.example`:
+   - `DATABASE_NAME`
+   - `DATABASE_USER`
+   - `DATABASE_PASSWORD`
+   - `DATABASE_HOST`
+   - `DATABASE_PORT`
+3. Set:
+   - `SECRET_KEY`
+   - `ALLOWED_HOSTS=yourusername.pythonanywhere.com`
+   - `REDIS_URL`
+4. Run:
 ```bash
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
 
-### 5. Configure WSGI
-In the PythonAnywhere Web tab:
-
-- **WSGI file**: `/home/yourusername/CarrerPathPro/career_platform/wsgi.py`
-- **Source code**: `/home/yourusername/CarrerPathPro`
-- **Working dir**: `/home/yourusername/CarrerPathPro`
-
-### 6. Static Files Mapping
-Set static files:
-
-- URL: `/static/`
-- Directory: `/home/yourusername/CarrerPathPro/staticfiles`
-
-### 7. Reload Web App
-Click **Reload** in PythonAnywhere.
-
+## Main App Routes
+- `/users/`
+- `/student/`
+- `/counselor/`
+- `/assessments/`
+- `/appointments/`
+- `/recommendations/`
+- `/chat/`
+- `/dashboard/`
+- `/ws/status/` (HTTP health endpoint for websocket module)

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Student Detail{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">{{ student_user.get_full_name|default:student_user.username }}</h3>
+        <a href="{% url 'dashboard:counselor' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5>Profile</h5>
+                    <p class="mb-1"><strong>Email:</strong> {{ student_user.email|default:"N/A" }}</p>
+                    <p class="mb-1"><strong>Phone:</strong> {{ student_user.phone|default:"N/A" }}</p>
+                    <p class="mb-1"><strong>City:</strong> {{ profile.city|default:"N/A" }}</p>
+                    <p class="mb-0"><strong>Interests:</strong> {{ profile.interests|default:"N/A" }}</p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5>Add Counselor Note</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <textarea name="note" class="form-control mb-2" rows="4" placeholder="Add your note..."></textarea>
+                        <button type="submit" class="btn btn-primary">Save Note</button>
+                    </form>
+                    <hr>
+                    <h6>Recent Notes</h6>
+                    {% for note in notes %}
+                    <div class="border rounded p-2 mb-2">
+                        <p class="small mb-1">{{ note.note }}</p>
+                        <p class="small text-muted mb-0">{{ note.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No notes yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Assignment Submissions</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Assignment</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Submitted</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for submission in submissions %}
+                            <tr>
+                                <td>{{ submission.assignment.title }}</td>
+                                <td>{{ submission.total_score|floatformat:1 }}</td>
+                                <td>{{ submission.percentage|floatformat:1 }}%</td>
+                                <td>{{ submission.completed_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-muted">No submissions yet.</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-3">Topic-wise Analysis</h5>
+                    <canvas id="topicAnalysisChart" height="130"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const labels = [{% for item in topic_analysis %}"{{ item.topic|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const values = [{% for item in topic_analysis %}{{ item.score_percentage|floatformat:2 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    if (!labels.length) return;
+    const colors = [{% for item in topic_analysis %}
+        "{% if item.strength_level == 'strong' %}#198754{% elif item.strength_level == 'average' %}#ffc107{% else %}#dc3545{% endif %}"{% if not forloop.last %}, {% endif %}
+    {% endfor %}];
+
+    new Chart(document.getElementById('topicAnalysisChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ label: 'Score %', data: values, backgroundColor: colors }]
+        },
+        options: {
+            scales: { y: { beginAtZero: true, max: 100 } }
+        }
+    });
+})();
+</script>
+{% endblock %}

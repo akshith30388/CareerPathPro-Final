@@ -27,7 +27,7 @@ sys.path.insert(0, project_dir)
 
 # Set environment
 os.environ['ENVIRONMENT'] = 'production'
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'career_platform.settings.production')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')
 
 # Load environment variables from .env
 env_file = Path(project_dir) / '.env'

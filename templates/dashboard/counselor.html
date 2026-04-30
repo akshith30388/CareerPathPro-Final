@@ -54,6 +54,13 @@
                 <p class="text-muted small mb-0">New Messages</p>
             </div>
         </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-bell text-primary" style="font-size:2rem;"></i>
+                <h4 class="fw-bold mt-1" id="student-activity-count">{{ unread_student_activity }}</h4>
+                <p class="text-muted small mb-0">Student Activity</p>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4">
@@ -148,6 +155,49 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-people-fill me-2 text-success"></i>Assigned Students (Live)</h6>
+                    <span class="badge bg-primary" id="assigned-students-count">{{ assigned_students|length }}</span>
+                </div>
+                <div class="card-body" id="assigned-students-list">
+                    {% for student in assigned_students %}
+                    <div class="card border mb-2 p-3" data-student-id="{{ student.id }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ student.name }}</h6>
+                                <p class="small text-muted mb-1">{{ student.contact }}</p>
+                                <p class="small mb-1">
+                                    Latest score:
+                                    {% if student.latest_score is not None %}
+                                    <span class="student-score">{{ student.latest_score|floatformat:1 }}</span> /
+                                    <span class="student-percentage">{{ student.latest_percentage|floatformat:1 }}%</span>
+                                    {% else %}
+                                    <span class="student-score">N/A</span>
+                                    {% endif %}
+                                </p>
+                                <p class="small mb-1"><strong>Strong:</strong> {{ student.strong_topics|join:", "|default:"-" }}</p>
+                                <p class="small mb-0"><strong>Weak:</strong> {{ student.weak_topics|join:", "|default:"-" }}</p>
+                            </div>
+                            <div class="text-end">
+                                <p class="small text-muted mb-2">
+                                    Last active:
+                                    {% if student.last_active %}{{ student.last_active|date:"M d, Y H:i" }}{% else %}N/A{% endif %}
+                                </p>
+                                <a href="{% url 'counselor:student_detail' student.id %}" class="btn btn-outline-primary btn-sm">Open Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0" id="assigned-students-empty">No students assigned yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -156,6 +206,10 @@
 (function () {
     const endpoint = "{% url 'dashboard:counselor_data' %}";
     const csrfToken = "{{ csrf_token }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const counselorSocket = new WebSocket(
+        protocol + window.location.host + '/ws/counselor/{{ request.user.id }}/'
+    );
 
     const totalEl = document.getElementById('counselor-total-appointments');
     const ratingEl = document.getElementById('counselor-avg-rating');
@@ -167,9 +221,12 @@
     const completionEl = document.getElementById('counselor-completion-rate');
     const unreadBadge = document.getElementById('counselor-unread-badge');
     const syncedEl = document.getElementById('counselor-last-synced');
+    const activityBadgeEl = document.getElementById('student-activity-count');
+    const assignedStudentsCountEl = document.getElementById('assigned-students-count');
 
     const pendingList = document.getElementById('counselor-pending-list');
     const feedbackList = document.getElementById('counselor-feedback-list');
+    const assignedStudentsList = document.getElementById('assigned-students-list');
 
     function escapeHtml(value) {
         return String(value || '')
@@ -243,6 +300,85 @@
         `).join('');
     }
 
+    function renderAssignedStudents(items) {
+        assignedStudentsCountEl.textContent = items.length;
+        if (!items.length) {
+            assignedStudentsList.innerHTML = '<p class="text-muted mb-0" id="assigned-students-empty">No students assigned yet.</p>';
+            return;
+        }
+
+        assignedStudentsList.innerHTML = items.map((student) => `
+            <div class="card border mb-2 p-3" data-student-id="${student.id}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">${escapeHtml(student.name)}</h6>
+                        <p class="small text-muted mb-1">${escapeHtml(student.contact || 'N/A')}</p>
+                        <p class="small mb-1">
+                            Latest score:
+                            ${student.latest_score !== null && student.latest_score !== undefined
+                                ? `<span class="student-score">${Number(student.latest_score).toFixed(1)}</span> / <span class="student-percentage">${Number(student.latest_percentage).toFixed(1)}%</span>`
+                                : '<span class="student-score">N/A</span>'}
+                        </p>
+                        <p class="small mb-1"><strong>Strong:</strong> ${escapeHtml((student.strong_topics || []).join(', ') || '-')}</p>
+                        <p class="small mb-0"><strong>Weak:</strong> ${escapeHtml((student.weak_topics || []).join(', ') || '-')}</p>
+                    </div>
+                    <div class="text-end">
+                        <p class="small text-muted mb-2">Last active: ${escapeHtml(student.last_active || 'N/A')}</p>
+                        <a href="${escapeHtml(student.detail_url || ('/counselor/students/' + student.id + '/'))}" class="btn btn-outline-primary btn-sm">Open Profile</a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function addStudentCard(studentName, assignedAt) {
+        const empty = document.getElementById('assigned-students-empty');
+        if (empty) {
+            empty.remove();
+        }
+        const card = document.createElement('div');
+        card.className = 'card border mb-2 p-3';
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">${escapeHtml(studentName)}</h6>
+                    <p class="small text-muted mb-0">Assigned at ${escapeHtml(assignedAt || '')}</p>
+                </div>
+                <span class="badge bg-info text-dark">New</span>
+            </div>
+        `;
+        assignedStudentsList.prepend(card);
+        assignedStudentsCountEl.textContent = Number(assignedStudentsCountEl.textContent || 0) + 1;
+    }
+
+    function updateNotificationBadge() {
+        activityBadgeEl.textContent = Number(activityBadgeEl.textContent || 0) + 1;
+    }
+
+    function updateStudentScore(studentId, score, percentage) {
+        const studentCard = assignedStudentsList.querySelector('[data-student-id="' + studentId + '"]');
+        if (!studentCard) return;
+        const scoreEl = studentCard.querySelector('.student-score');
+        const percentageEl = studentCard.querySelector('.student-percentage');
+        if (scoreEl) scoreEl.textContent = Number(score).toFixed(1);
+        if (percentageEl) percentageEl.textContent = Number(percentage).toFixed(1) + '%';
+    }
+
+    counselorSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'assigned_students') {
+            renderAssignedStudents(data.students || []);
+        }
+        if (data.type === 'student_assigned') {
+            addStudentCard(data.student_name, data.assigned_at);
+            updateNotificationBadge();
+        }
+        if (data.type === 'assignment_submitted') {
+            updateStudentScore(data.student_id, data.score, data.percentage);
+            updateNotificationBadge();
+        }
+    };
+
     async function refreshDashboard() {
         try {
             const response = await fetch(endpoint, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -258,6 +394,7 @@
             unreadEl.textContent = data.totals.unread_messages;
             completionEl.textContent = `${data.totals.completion_rate}%`;
             syncedEl.textContent = data.updated_at;
+            activityBadgeEl.textContent = data.totals.unread_student_activity;
 
             if (data.totals.unread_messages > 0) {
                 unreadBadge.textContent = data.totals.unread_messages;
@@ -268,6 +405,7 @@
 
             renderPending(data.pending_appointments || []);
             renderFeedback(data.recent_feedbacks || []);
+            renderAssignedStudents(data.assigned_students || []);
         } catch (error) {
             console.error('Counselor dashboard refresh failed:', error);
         }

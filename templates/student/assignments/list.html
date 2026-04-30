@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Active Assignments</h3>
+        <a href="{% url 'dashboard:student' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="row g-3">
+        {% for item in assignment_cards %}
+        {% with assignment=item.assignment submission=item.submission %}
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">{{ assignment.title }}</h5>
+                    <p class="text-muted small mb-2">Created {{ assignment.created_at|date:"M d, Y H:i" }}</p>
+                    <p class="card-text">{{ assignment.description }}</p>
+                    {% if assignment.due_date %}
+                    <p class="small mb-2"><strong>Due:</strong> {{ assignment.due_date|date:"M d, Y H:i" }}</p>
+                    {% endif %}
+                    <p class="small mb-3"><strong>Questions:</strong> {{ assignment.questions.count }}</p>
+                    {% if submission and submission.is_submitted %}
+                    <a href="{% url 'students:assignment_result' assignment.id %}" class="btn btn-success">View Result</a>
+                    {% else %}
+                    <a href="{% url 'students:assignment_start' assignment.id %}" class="btn btn-primary">
+                        {% if submission %}Resume{% else %}Start{% endif %} Assignment
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No active assignments are available right now.</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

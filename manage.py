@@ -2,27 +2,14 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from pathlib import Path
-
-# Load environment variables from .env file
-try:
-    from dotenv import load_dotenv
-    env_file = Path(__file__).resolve().parent / '.env'
-    if env_file.exists():
-        load_dotenv(env_file)
-except ImportError:
-    pass
 
 
 def main():
     """Run administrative tasks."""
-    # Determine environment and set Django settings module
-    environment = os.environ.get('ENVIRONMENT', 'local')
-    if environment == 'production':
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'career_platform.settings.production')
-    else:
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'career_platform.settings.local')
-    
+    environment = os.environ.get("ENVIRONMENT", "local").lower()
+    settings_module = "config.settings.production" if environment == "production" else "config.settings.local"
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_module)
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

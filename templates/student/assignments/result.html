@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Assignment Result{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Result: {{ assignment.title }}</h3>
+        <a href="{% url 'students:assignment_list' %}" class="btn btn-outline-secondary">All Assignments</a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="mb-3">Overall Score Card</h4>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="small text-muted mb-1">Score</p>
+                        <h5 class="mb-0">{{ submission.total_score|floatformat:1 }} / {{ total_marks|floatformat:1 }}</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="small text-muted mb-1">Percentage</p>
+                        <h5 class="mb-0
+                            {% if submission.percentage >= 70 %}text-success
+                            {% elif submission.percentage >= 40 %}text-warning
+                            {% else %}text-danger{% endif %}">
+                            {{ submission.percentage|floatformat:1 }}%
+                        </h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="small text-muted mb-1">Grade</p>
+                        <h5 class="mb-0">{{ grade }}</h5>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 bg-light rounded">
+                        <p class="small text-muted mb-1">Time Taken</p>
+                        <h6 class="mb-0">{{ time_taken }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Topic Analysis</h5>
+                    <canvas id="topicChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Topic Strengths</h5>
+                    {% for item in topic_analyses %}
+                    <div class="border rounded p-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>{{ item.topic }}</strong>
+                            {% if item.strength_level == 'strong' %}
+                            <span class="badge bg-success">Strong 💪</span>
+                            {% elif item.strength_level == 'average' %}
+                            <span class="badge text-dark bg-warning">Average 📈</span>
+                            {% else %}
+                            <span class="badge bg-danger">Weak ⚠️</span>
+                            {% endif %}
+                        </div>
+                        <p class="small mb-1">{{ item.correct_answers }} / {{ item.total_questions }} correct</p>
+                        <p class="small mb-0">{{ topic_suggestions[item.topic] }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No topic analysis available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Detailed Question Review</h5>
+            {% for item in review_items %}
+            <div class="border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>{{ forloop.counter }}. {{ item.question.question_text }}</strong>
+                    {% if item.answer.is_correct %}
+                    <span class="text-success">✅ Correct</span>
+                    {% else %}
+                    <span class="text-danger">❌ Incorrect</span>
+                    {% endif %}
+                </div>
+                <p class="small text-muted mb-1">Topic: {{ item.question.topic }}</p>
+                {% if item.question.question_type == 'text' %}
+                <p class="mb-1"><strong>Your Answer:</strong> {{ item.answer.text_answer|default:"-" }}</p>
+                <p class="mb-0"><strong>Auto-Grade:</strong> Manual review needed for text response.</p>
+                {% else %}
+                <p class="mb-1"><strong>Your Answer(s):</strong> {{ item.selected_options|join:", "|default:"-" }}</p>
+                <p class="mb-0"><strong>Correct Answer(s):</strong> {{ item.correct_options|join:", "|default:"-" }}</p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="text-muted">No answers found.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const labels = [{% for item in topic_analyses %}"{{ item.topic|escapejs }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const percentages = [{% for item in topic_analyses %}{{ item.score_percentage|floatformat:2 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const colors = [{% for item in topic_analyses %}
+        "{% if item.strength_level == 'strong' %}#198754{% elif item.strength_level == 'average' %}#ffc107{% else %}#dc3545{% endif %}"{% if not forloop.last %}, {% endif %}
+    {% endfor %}];
+
+    const ctx = document.getElementById('topicChart');
+    if (!ctx || !labels.length) return;
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Topic Score (%)',
+                data: percentages,
+                backgroundColor: colors
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    title: { display: true, text: 'Percentage' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        },
+        plugins: [{
+            id: 'threshold-line',
+            afterDraw(chart) {
+                const yScale = chart.scales.y;
+                const y = yScale.getPixelForValue(70);
+                const ctx2 = chart.ctx;
+                ctx2.save();
+                ctx2.strokeStyle = '#6c757d';
+                ctx2.setLineDash([5, 5]);
+                ctx2.beginPath();
+                ctx2.moveTo(chart.chartArea.left, y);
+                ctx2.lineTo(chart.chartArea.right, y);
+                ctx2.stroke();
+                ctx2.restore();
+            }
+        }]
+    });
+})();
+</script>
+{% endblock %}

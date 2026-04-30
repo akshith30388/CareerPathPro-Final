@@ -3,8 +3,17 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import transaction
+from asgiref.sync import async_to_sync
+
 from .models import CustomUser, StudentProfile, CounselorProfile
 from .forms import RegisterForm, LoginForm, StudentProfileForm, CounselorProfileForm
+from students.models import CounselorAssignment
+
+try:
+    from channels.layers import get_channel_layer
+except ImportError:
+    def get_channel_layer():
+        return None
 
 
 def home_view(request):
@@ -122,6 +131,20 @@ def edit_profile_view(request):
             if request.FILES.get('profile_picture'):
                 user.profile_picture = request.FILES['profile_picture']
             user.save()
+
+            if user.is_student():
+                assignment = CounselorAssignment.objects.filter(student=user, is_active=True).first()
+                channel_layer = get_channel_layer()
+                if assignment and channel_layer:
+                    async_to_sync(channel_layer.group_send)(
+                        f"counselor_{assignment.counselor_id}",
+                        {
+                            "type": "student_profile_update",
+                            "student_id": user.id,
+                            "student_name": user.get_full_name() or user.username,
+                        },
+                    )
+
             messages.success(request, 'Profile updated successfully!')
             return redirect('users:profile')
     else:

@@ -24,9 +24,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', user_views.home_view, name='home'),
     path('users/', include('users.urls', namespace='users')),
+    path('student/', include('students.urls', namespace='students')),
+    path('counselor/', include('counselor.urls', namespace='counselor')),
     path('assessments/', include('assessments.urls', namespace='assessments')),
     path('appointments/', include('appointments.urls', namespace='appointments')),
     path('recommendations/', include('recommendations.urls', namespace='recommendations')),
     path('chat/', include('chat.urls', namespace='chat')),
     path('dashboard/', include('dashboard.urls', namespace='dashboard')),
+    path('ws/', include('routing.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

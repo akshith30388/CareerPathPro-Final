@@ -10,6 +10,7 @@ from appointments.models import Appointment, Feedback
 from assessments.models import AssessmentResult
 from chat.models import Message
 from recommendations.models import CareerRecommendation
+from students.models import CounselorAssignment, StudentSubmission, TopicAnalysis
 from users.models import CounselorProfile, CustomUser, StudentProfile
 
 from .forms import ResumeForm
@@ -44,6 +45,7 @@ def _student_metrics(user):
 def _counselor_metrics(user):
     appointments = Appointment.objects.filter(counselor=user).select_related('student')
     feedbacks = Feedback.objects.filter(counselor=user).select_related('student')
+    assignments = CounselorAssignment.objects.filter(counselor=user, is_active=True).select_related("student")
 
     total_appointments = appointments.count()
     pending = appointments.filter(status='pending').order_by('date', 'time_slot')
@@ -52,6 +54,44 @@ def _counselor_metrics(user):
     avg_rating = feedbacks.aggregate(avg=Avg('rating'))['avg'] or 0
 
     completion_rate = round((completed_count / total_appointments) * 100, 1) if total_appointments else 0
+
+    assigned_students_payload = []
+    student_ids = []
+    for relation in assignments:
+        student = relation.student
+        student_ids.append(student.id)
+        profile = StudentProfile.objects.filter(user=student).first()
+        latest_submission = (
+            StudentSubmission.objects.filter(student=student, is_submitted=True)
+            .select_related("assignment")
+            .order_by("-completed_at")
+            .first()
+        )
+        topic_analyses = TopicAnalysis.objects.filter(submission=latest_submission) if latest_submission else []
+        strong_topics = [item.topic for item in topic_analyses if item.strength_level == "strong"]
+        weak_topics = [item.topic for item in topic_analyses if item.strength_level == "weak"]
+        assigned_students_payload.append(
+            {
+                "id": student.id,
+                "name": _display_name(student),
+                "contact": student.email or student.phone or "N/A",
+                "profile_photo": student.profile_picture.url if student.profile_picture else "",
+                "city": profile.city if profile else "",
+                "latest_score": latest_submission.total_score if latest_submission else None,
+                "latest_percentage": latest_submission.percentage if latest_submission else None,
+                "last_active": student.last_login,
+                "strong_topics": strong_topics,
+                "weak_topics": weak_topics,
+            }
+        )
+
+    unread_student_activity = 0
+    if student_ids:
+        unread_student_activity = StudentSubmission.objects.filter(
+            student_id__in=student_ids,
+            is_submitted=True,
+            completed_at__gte=timezone.now() - timezone.timedelta(days=1),
+        ).count()
 
     return {
         'pending': pending,
@@ -64,6 +104,8 @@ def _counselor_metrics(user):
         'unread_messages': Message.objects.filter(receiver=user, is_read=False).count(),
         'students_helped': appointments.values('student').distinct().count(),
         'completion_rate': completion_rate,
+        'assigned_students': assigned_students_payload,
+        'unread_student_activity': unread_student_activity,
     }
 
 
@@ -176,6 +218,8 @@ def counselor_dashboard(request):
         'unread_messages': metrics['unread_messages'],
         'students_helped': metrics['students_helped'],
         'completion_rate': metrics['completion_rate'],
+        'assigned_students': metrics['assigned_students'],
+        'unread_student_activity': metrics['unread_student_activity'],
     }
     return render(request, 'dashboard/counselor.html', context)
 
@@ -209,6 +253,23 @@ def counselor_dashboard_data(request):
         for item in metrics['feedbacks']
     ]
 
+    assigned_students_payload = [
+        {
+            'id': student['id'],
+            'name': student['name'],
+            'contact': student['contact'],
+            'profile_photo': student['profile_photo'],
+            'city': student['city'],
+            'latest_score': student['latest_score'],
+            'latest_percentage': student['latest_percentage'],
+            'last_active': student['last_active'].strftime('%b %d, %Y %I:%M %p') if student['last_active'] else 'N/A',
+            'strong_topics': student['strong_topics'],
+            'weak_topics': student['weak_topics'],
+            'detail_url': reverse('counselor:student_detail', args=[student['id']]),
+        }
+        for student in metrics['assigned_students']
+    ]
+
     return JsonResponse({
         'totals': {
             'pending': metrics['pending_count'],
@@ -219,9 +280,11 @@ def counselor_dashboard_data(request):
             'completion_rate': metrics['completion_rate'],
             'total_appointments': metrics['total_appointments'],
             'avg_rating': metrics['avg_rating'],
+            'unread_student_activity': metrics['unread_student_activity'],
         },
         'pending_appointments': pending_payload,
         'recent_feedbacks': feedback_payload,
+        'assigned_students': assigned_students_payload,
         'updated_at': timezone.localtime().strftime('%I:%M %p'),
     })
 

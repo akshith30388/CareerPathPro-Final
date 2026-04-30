@@ -36,6 +36,14 @@
                     {% endif %}
                     {% endwith %}
                     <div class="d-grid gap-2 mt-3">
+                        {% if request.user.role == 'student' %}
+                        <form method="post" action="{% url 'students:select_counselor' counselor.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-success btn-sm w-100" type="submit">
+                                <i class="bi bi-person-check me-1"></i>Select Counselor
+                            </button>
+                        </form>
+                        {% endif %}
                         <a href="{% url 'chat:conversation' counselor.pk %}" class="btn btn-primary btn-sm">
                             <i class="bi bi-chat-dots me-1"></i>Send Message
                         </a>
@@ -56,4 +64,3 @@
     </div>
 </div>
 {% endblock %}
-
