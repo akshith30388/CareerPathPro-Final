@@ -30,10 +30,10 @@ CareerPath Pro is a Django-based counseling platform with role-based dashboards 
 The project now uses split settings under `config/settings/`:
 - `config/settings/base.py`
 - `config/settings/local.py` (DEBUG=True, SQLite)
-- `config/settings/production.py` (DEBUG=False, MySQL, WhiteNoise, Redis channel layer)
+- `config/settings/production.py` (DEBUG=False, PostgreSQL via `DATABASE_URL`, WhiteNoise, Redis channel layer)
 
 `manage.py` selects settings by `ENVIRONMENT` (`local` or `production`).
-`career_platform/wsgi.py` points to `config.settings.production` for PythonAnywhere deployment.
+`career_platform/wsgi.py` points to `config.settings.production` for deployment.
 
 ## Local Setup
 1. Create env file:
@@ -54,17 +54,13 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-## Production Notes (PythonAnywhere + MySQL)
+## Production Notes (Render + PostgreSQL)
 1. Set `ENVIRONMENT=production` in `.env`
-2. Fill all DB keys from `.env.example`:
-   - `DATABASE_NAME`
-   - `DATABASE_USER`
-   - `DATABASE_PASSWORD`
-   - `DATABASE_HOST`
-   - `DATABASE_PORT`
+2. Set:
+   - `DATABASE_URL=postgres://user:password@host:5432/dbname`
 3. Set:
    - `SECRET_KEY`
-   - `ALLOWED_HOSTS=yourusername.pythonanywhere.com`
+   - `ALLOWED_HOSTS=your-app-name.onrender.com`
    - `REDIS_URL`
 4. Run:
 ```bash
