@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block title %}Resume Builder - CareerPath Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+.section-card { border-left: 4px solid #1e3c72; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold"><i class="bi bi-file-earmark-person me-2 text-primary"></i>Resume Builder</h4>
+            <p class="text-muted small">Fill in your details to generate a professional resume</p>
+        </div>
+        {% if resume.full_name %}
+        <a href="{% url 'dashboard:resume_preview' %}" class="btn btn-success">
+            <i class="bi bi-eye me-2"></i>Preview Resume
+        </a>
+        {% endif %}
+    </div>
+
+    <form method="post" id="resume-form">
+        {% csrf_token %}
+        <div class="row g-4">
+            <!-- Personal Info -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 section-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-person me-2 text-primary"></i>Personal Information</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Full Name *</label>
+                                {{ form.full_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Email *</label>
+                                {{ form.email }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Phone</label>
+                                {{ form.phone }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">Address</label>
+                                {{ form.address }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">LinkedIn</label>
+                                {{ form.linkedin }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold small">GitHub</label>
+                                {{ form.github }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 section-card">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-card-text me-2 text-primary"></i>Professional Summary</h6>
+                        {{ form.summary }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 section-card h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-tools me-2 text-primary"></i>Skills</h6>
+                        {{ form.skills }}
+                        <div class="form-text">Separate with commas</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Languages & Hobbies -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 section-card h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-translate me-2 text-primary"></i>Languages</h6>
+                        {{ form.languages }}
+                        <h6 class="fw-bold mb-2 mt-3"><i class="bi bi-heart me-2 text-primary"></i>Hobbies</h6>
+                        {{ form.hobbies }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 section-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-mortarboard me-2 text-primary"></i>Education</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-edu">
+                                <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
+                        </div>
+                        <div id="edu-container">
+                            {% for edu in resume.education %}
+                            <div class="edu-entry card border-0 bg-light rounded-3 p-3 mb-2">
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <input type="text" name="edu_degree" class="form-control form-control-sm" placeholder="Degree / Course" value="{{ edu.degree }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="Institution" value="{{ edu.institution }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" name="edu_year" class="form-control form-control-sm" placeholder="Year (e.g. 2020-2024)" value="{{ edu.year }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" name="edu_grade" class="form-control form-control-sm" placeholder="Grade/CGPA" value="{{ edu.grade }}">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-center">
+                                        <button type="button" class="btn btn-danger btn-sm remove-edu"><i class="bi bi-trash"></i> Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="edu-entry card border-0 bg-light rounded-3 p-3 mb-2">
+                                <div class="row g-2">
+                                    <div class="col-md-6"><input type="text" name="edu_degree" class="form-control form-control-sm" placeholder="Degree / Course"></div>
+                                    <div class="col-md-6"><input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="Institution"></div>
+                                    <div class="col-md-4"><input type="text" name="edu_year" class="form-control form-control-sm" placeholder="Year (e.g. 2020-2024)"></div>
+                                    <div class="col-md-4"><input type="text" name="edu_grade" class="form-control form-control-sm" placeholder="Grade/CGPA"></div>
+                                    <div class="col-md-4 d-flex align-items-center"><button type="button" class="btn btn-danger btn-sm remove-edu"><i class="bi bi-trash"></i> Remove</button></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Experience -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm rounded-4 section-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0"><i class="bi bi-briefcase me-2 text-primary"></i>Work Experience</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="add-exp">
+                                <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
+                        </div>
+                        <div id="exp-container">
+                            {% for exp in resume.experience %}
+                            <div class="exp-entry card border-0 bg-light rounded-3 p-3 mb-2">
+                                <div class="row g-2">
+                                    <div class="col-md-4"><input type="text" name="exp_title" class="form-control form-control-sm" placeholder="Job Title" value="{{ exp.title }}"></div>
+                                    <div class="col-md-4"><input type="text" name="exp_company" class="form-control form-control-sm" placeholder="Company" value="{{ exp.company }}"></div>
+                                    <div class="col-md-4"><input type="text" name="exp_duration" class="form-control form-control-sm" placeholder="Duration (e.g. Jan 2023 - Present)" value="{{ exp.duration }}"></div>
+                                    <div class="col-md-10"><textarea name="exp_desc" class="form-control form-control-sm" rows="2" placeholder="Description of responsibilities">{{ exp.description }}</textarea></div>
+                                    <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-danger btn-sm remove-exp"><i class="bi bi-trash"></i> Remove</button></div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="exp-entry card border-0 bg-light rounded-3 p-3 mb-2">
+                                <div class="row g-2">
+                                    <div class="col-md-4"><input type="text" name="exp_title" class="form-control form-control-sm" placeholder="Job Title"></div>
+                                    <div class="col-md-4"><input type="text" name="exp_company" class="form-control form-control-sm" placeholder="Company"></div>
+                                    <div class="col-md-4"><input type="text" name="exp_duration" class="form-control form-control-sm" placeholder="Duration"></div>
+                                    <div class="col-md-10"><textarea name="exp_desc" class="form-control form-control-sm" rows="2" placeholder="Description"></textarea></div>
+                                    <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-danger btn-sm remove-exp"><i class="bi bi-trash"></i> Remove</button></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                <i class="bi bi-save me-2"></i>Save & Preview Resume
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add education entry
+document.getElementById('add-edu').addEventListener('click', () => {
+    const container = document.getElementById('edu-container');
+    const entry = document.createElement('div');
+    entry.className = 'edu-entry card border-0 bg-light rounded-3 p-3 mb-2';
+    entry.innerHTML = `<div class="row g-2">
+        <div class="col-md-6"><input type="text" name="edu_degree" class="form-control form-control-sm" placeholder="Degree / Course"></div>
+        <div class="col-md-6"><input type="text" name="edu_institution" class="form-control form-control-sm" placeholder="Institution"></div>
+        <div class="col-md-4"><input type="text" name="edu_year" class="form-control form-control-sm" placeholder="Year"></div>
+        <div class="col-md-4"><input type="text" name="edu_grade" class="form-control form-control-sm" placeholder="Grade/CGPA"></div>
+        <div class="col-md-4 d-flex align-items-center"><button type="button" class="btn btn-danger btn-sm remove-edu"><i class="bi bi-trash"></i> Remove</button></div>
+    </div>`;
+    container.appendChild(entry);
+    attachRemove();
+});
+
+// Add experience entry
+document.getElementById('add-exp').addEventListener('click', () => {
+    const container = document.getElementById('exp-container');
+    const entry = document.createElement('div');
+    entry.className = 'exp-entry card border-0 bg-light rounded-3 p-3 mb-2';
+    entry.innerHTML = `<div class="row g-2">
+        <div class="col-md-4"><input type="text" name="exp_title" class="form-control form-control-sm" placeholder="Job Title"></div>
+        <div class="col-md-4"><input type="text" name="exp_company" class="form-control form-control-sm" placeholder="Company"></div>
+        <div class="col-md-4"><input type="text" name="exp_duration" class="form-control form-control-sm" placeholder="Duration"></div>
+        <div class="col-md-10"><textarea name="exp_desc" class="form-control form-control-sm" rows="2" placeholder="Description"></textarea></div>
+        <div class="col-md-2 d-flex align-items-center"><button type="button" class="btn btn-danger btn-sm remove-exp"><i class="bi bi-trash"></i> Remove</button></div>
+    </div>`;
+    container.appendChild(entry);
+    attachRemove();
+});
+
+function attachRemove() {
+    document.querySelectorAll('.remove-edu').forEach(btn => {
+        btn.onclick = () => btn.closest('.edu-entry').remove();
+    });
+    document.querySelectorAll('.remove-exp').forEach(btn => {
+        btn.onclick = () => btn.closest('.exp-entry').remove();
+    });
+}
+attachRemove();
+</script>
+{% endblock %}
+

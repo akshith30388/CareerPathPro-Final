@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% block title %}Take Assessment - CareerPath Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+.question-card { transition: all 0.3s ease; }
+.question-card:hover { transform: translateY(-2px); }
+.form-check-label { cursor: pointer; }
+.form-check-input:checked + .form-check-label { color: #1e3c72; font-weight: 600; }
+.option-card { border: 2px solid #e9ecef; border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+.option-card:hover { border-color: #1e3c72; background: #f0f4ff; }
+input[type=radio]:checked ~ .option-card { border-color: #1e3c72; background: #e8eeff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1">Career Assessment</h4>
+                    <p class="text-muted small mb-0">Answer all questions honestly for the best results</p>
+                </div>
+                <div class="text-end">
+                    <div id="timer" class="fw-bold fs-5 text-primary">
+                        <i class="bi bi-clock me-1"></i><span id="time-display">20:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress mb-4" style="height:8px; border-radius:10px;">
+                <div class="progress-bar" id="progress-bar" style="width:0%; background:linear-gradient(135deg,#1e3c72,#2a5298); transition:width 0.3s;"></div>
+            </div>
+
+            <form method="post" id="assessment-form">
+                {% csrf_token %}
+                {% for q in questions %}
+                <div class="card border-0 shadow-sm rounded-4 mb-4 question-card" id="question-{{ forloop.counter }}">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <span class="badge me-3 flex-shrink-0 px-3 py-2" style="background:linear-gradient(135deg,#1e3c72,#2a5298);font-size:0.85rem;">
+                                Q{{ forloop.counter }}
+                            </span>
+                            <span class="badge bg-light text-muted me-2 flex-shrink-0">{{ q.get_category_display }}</span>
+                            <p class="mb-0 fw-semibold">{{ q.question_text }}</p>
+                        </div>
+                        <div class="ps-2">
+                            {% with field_name="question_"|add:q.id|stringformat:"s" %}
+                            <div class="option-item mb-2">
+                                <label class="d-flex align-items-center option-card w-100">
+                                    <input type="radio" name="{{ field_name }}" value="a" class="form-check-input me-3 flex-shrink-0" required>
+                                    <span><strong class="text-primary me-2">A.</strong> {{ q.option_a }}</span>
+                                </label>
+                            </div>
+                            <div class="option-item mb-2">
+                                <label class="d-flex align-items-center option-card w-100">
+                                    <input type="radio" name="{{ field_name }}" value="b" class="form-check-input me-3 flex-shrink-0">
+                                    <span><strong class="text-primary me-2">B.</strong> {{ q.option_b }}</span>
+                                </label>
+                            </div>
+                            <div class="option-item mb-2">
+                                <label class="d-flex align-items-center option-card w-100">
+                                    <input type="radio" name="{{ field_name }}" value="c" class="form-check-input me-3 flex-shrink-0">
+                                    <span><strong class="text-primary me-2">C.</strong> {{ q.option_c }}</span>
+                                </label>
+                            </div>
+                            <div class="option-item mb-2">
+                                <label class="d-flex align-items-center option-card w-100">
+                                    <input type="radio" name="{{ field_name }}" value="d" class="form-check-input me-3 flex-shrink-0">
+                                    <span><strong class="text-primary me-2">D.</strong> {{ q.option_d }}</span>
+                                </label>
+                            </div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-warning rounded-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    No questions available. Please ask an admin to add assessment questions.
+                </div>
+                {% endfor %}
+
+                {% if questions %}
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                        <i class="bi bi-send-check me-2"></i>Submit Assessment
+                    </button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Timer
+let timeLeft = 20 * 60;
+const timerEl = document.getElementById('time-display');
+const timer = setInterval(() => {
+    if (timeLeft <= 0) { clearInterval(timer); document.getElementById('assessment-form').submit(); return; }
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    timerEl.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    if (timeLeft < 300) timerEl.parentElement.classList.add('text-danger');
+}, 1000);
+
+// Progress bar
+const totalQ = {{ questions|length }};
+function updateProgress() {
+    let answered = 0;
+    const names = new Set();
+    document.querySelectorAll('input[type=radio]:checked').forEach(r => names.add(r.name));
+    answered = names.size;
+    const pct = totalQ > 0 ? (answered / totalQ * 100) : 0;
+    document.getElementById('progress-bar').style.width = pct + '%';
+}
+document.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener('change', updateProgress));
+
+// Option card highlight
+document.querySelectorAll('.option-card').forEach(card => {
+    const radio = card.querySelector('input[type=radio]');
+    if (radio) {
+        radio.addEventListener('change', () => {
+            const groupName = radio.name;
+            document.querySelectorAll(`input[name="${groupName}"]`).forEach(r => {
+                r.closest('label').style.borderColor = '#e9ecef';
+                r.closest('label').style.background = '';
+            });
+            if (radio.checked) {
+                card.style.borderColor = '#1e3c72';
+                card.style.background = '#e8eeff';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

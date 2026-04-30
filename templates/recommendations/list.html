@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Career Recommendations - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold"><i class="bi bi-stars me-2 text-warning"></i>Your Career Recommendations</h4>
+            <p class="text-muted small">Based on your assessment results and interests</p>
+        </div>
+        <a href="{% url 'assessments:take' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat me-2"></i>Retake Assessment
+        </a>
+    </div>
+
+    {% if recommendations %}
+    <div class="row g-4">
+        {% for rec in recommendations %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary px-3 py-2 rounded-pill">#{{ forloop.counter }} Match</span>
+                        <span class="fw-bold text-success">{{ rec.confidence_score|floatformat:0 }}%</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ rec.recommended_career }}</h5>
+                    <div class="progress mb-3" style="height:8px;">
+                        <div class="progress-bar" style="width:{{ rec.confidence_score }}%;background:linear-gradient(135deg,#1e3c72,#2a5298);"></div>
+                    </div>
+                    <p class="text-muted small">{{ rec.description|truncatechars:100 }}</p>
+                    <div class="mb-3">
+                        {% for skill in rec.get_skills_list|slice:":4" %}
+                        <span class="badge bg-light text-dark border me-1 mb-1 small">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'recommendations:detail' rec.pk %}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-map me-2"></i>View Roadmap
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-robot text-muted" style="font-size:4rem;"></i>
+        <h5 class="fw-bold mt-3">No Recommendations Yet</h5>
+        <p class="text-muted">Complete an assessment to get AI-powered career recommendations!</p>
+        <a href="{% url 'assessments:start' %}" class="btn btn-primary px-4 me-2">
+            <i class="bi bi-clipboard-check me-2"></i>Take Assessment
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

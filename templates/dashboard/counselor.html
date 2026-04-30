@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% block title %}Counselor Dashboard - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);">
+        <div class="card-body p-4 text-white">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="fw-bold mb-1">Welcome, {{ user.get_full_name|default:user.username }}
+                        <span class="badge bg-light text-success ms-2 fs-6">Counselor</span>
+                    </h4>
+                    <p class="mb-2" style="color:rgba(255,255,255,0.85);">{{ profile.specialization|default:"Career Counselor" }}</p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <span><i class="bi bi-star-fill me-1" style="color:#ffd700;"></i><span id="counselor-avg-rating">{{ avg_rating }}</span>/5 Rating</span>
+                        <span><i class="bi bi-calendar-check me-1"></i><span id="counselor-total-appointments">{{ total_appointments }}</span> Total Sessions</span>
+                        <span><i class="bi bi-people me-1"></i><span id="counselor-students-helped">{{ students_helped }}</span> Students Guided</span>
+                    </div>
+                    <p class="mb-0 small mt-2" style="color:rgba(255,255,255,0.7);">Last synced: <span id="counselor-last-synced">just now</span></p>
+                </div>
+                <div class="col-md-4 text-end d-none d-md-block">
+                    <i class="bi bi-person-badge" style="font-size:4rem; color:rgba(255,255,255,0.3);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-hourglass-split text-warning" style="font-size:2rem;"></i>
+                <h4 class="fw-bold mt-1" id="counselor-pending-count">{{ pending_appointments_count }}</h4>
+                <p class="text-muted small mb-0">Pending Requests</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-calendar-check text-success" style="font-size:2rem;"></i>
+                <h4 class="fw-bold mt-1" id="counselor-confirmed-count">{{ confirmed_appointments }}</h4>
+                <p class="text-muted small mb-0">Confirmed</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-check-circle text-primary" style="font-size:2rem;"></i>
+                <h4 class="fw-bold mt-1" id="counselor-completed-count">{{ completed_appointments }}</h4>
+                <p class="text-muted small mb-0">Completed</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-chat-dots text-danger" style="font-size:2rem;"></i>
+                <h4 class="fw-bold mt-1" id="counselor-unread-count">{{ unread_messages }}</h4>
+                <p class="text-muted small mb-0">New Messages</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-hourglass me-2 text-warning"></i>Pending Appointment Requests</h6>
+                    <a href="{% url 'appointments:manage' %}" class="btn btn-outline-primary btn-sm">Manage All</a>
+                </div>
+                <div class="card-body px-4" id="counselor-pending-list">
+                    {% for apt in pending_appointments %}
+                    <div class="card border-0 bg-light rounded-3 mb-2 p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 fw-semibold">{{ apt.student.get_full_name|default:apt.student.username }}</p>
+                                <p class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i>{{ apt.date|date:"M d, Y" }} at {{ apt.get_time_slot_display }}</p>
+                                {% if apt.notes %}<p class="small text-muted mb-0"><i class="bi bi-chat-left-text me-1"></i>{{ apt.notes|truncatechars:60 }}</p>{% endif %}
+                            </div>
+                            <div class="d-flex gap-1">
+                                <form method="post" action="{% url 'appointments:update' apt.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="confirmed">
+                                    <button class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i></button>
+                                </form>
+                                <form method="post" action="{% url 'appointments:update' apt.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3" id="counselor-pending-empty">
+                        <i class="bi bi-check-all text-success" style="font-size:2.5rem;"></i>
+                        <p class="text-muted small mt-2">No pending requests</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2 text-warning"></i>Quick Actions</h6>
+                    <p class="small text-muted mb-2">Completion rate: <span class="fw-semibold" id="counselor-completion-rate">{{ completion_rate }}%</span></p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'appointments:manage' %}" class="btn btn-primary">
+                            <i class="bi bi-calendar2-check me-2"></i>Manage Appointments
+                        </a>
+                        <a href="{% url 'chat:inbox' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots me-2"></i>Messages
+                            {% if unread_messages > 0 %}
+                            <span class="badge bg-danger ms-1" id="counselor-unread-badge">{{ unread_messages }}</span>
+                            {% else %}
+                            <span class="badge bg-danger ms-1 d-none" id="counselor-unread-badge">0</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'users:edit_profile' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-pencil-square me-2"></i>Update Availability
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-star me-2 text-warning"></i>Recent Feedback</h6>
+                </div>
+                <div class="card-body px-4" id="counselor-feedback-list">
+                    {% for fb in feedbacks %}
+                    <div class="mb-3 p-2 bg-light rounded-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-semibold small">{{ fb.student.get_full_name|default:fb.student.username }}</span>
+                            <span>
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= fb.rating %}
+                                <i class="bi bi-star-fill text-warning"></i>
+                                {% else %}
+                                <i class="bi bi-star text-muted"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-0">{{ fb.comment|default:"No comment"|truncatechars:80 }}</p>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small text-center py-2" id="counselor-feedback-empty">No feedback yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const endpoint = "{% url 'dashboard:counselor_data' %}";
+    const csrfToken = "{{ csrf_token }}";
+
+    const totalEl = document.getElementById('counselor-total-appointments');
+    const ratingEl = document.getElementById('counselor-avg-rating');
+    const studentsEl = document.getElementById('counselor-students-helped');
+    const pendingEl = document.getElementById('counselor-pending-count');
+    const confirmedEl = document.getElementById('counselor-confirmed-count');
+    const completedEl = document.getElementById('counselor-completed-count');
+    const unreadEl = document.getElementById('counselor-unread-count');
+    const completionEl = document.getElementById('counselor-completion-rate');
+    const unreadBadge = document.getElementById('counselor-unread-badge');
+    const syncedEl = document.getElementById('counselor-last-synced');
+
+    const pendingList = document.getElementById('counselor-pending-list');
+    const feedbackList = document.getElementById('counselor-feedback-list');
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function stars(rating) {
+        let html = '';
+        for (let i = 1; i <= 5; i += 1) {
+            html += i <= rating
+                ? '<i class="bi bi-star-fill text-warning"></i>'
+                : '<i class="bi bi-star text-muted"></i>';
+        }
+        return html;
+    }
+
+    function renderPending(items) {
+        if (!items.length) {
+            pendingList.innerHTML = `
+                <div class="text-center py-3" id="counselor-pending-empty">
+                    <i class="bi bi-check-all text-success" style="font-size:2.5rem;"></i>
+                    <p class="text-muted small mt-2">No pending requests</p>
+                </div>
+            `;
+            return;
+        }
+
+        pendingList.innerHTML = items.map((apt) => `
+            <div class="card border-0 bg-light rounded-3 mb-2 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="mb-1 fw-semibold">${escapeHtml(apt.student_name)}</p>
+                        <p class="text-muted small mb-1"><i class="bi bi-calendar me-1"></i>${escapeHtml(apt.date)} at ${escapeHtml(apt.time)}</p>
+                        ${apt.notes ? `<p class="small text-muted mb-0"><i class="bi bi-chat-left-text me-1"></i>${escapeHtml(apt.notes).slice(0, 90)}</p>` : ''}
+                    </div>
+                    <div class="d-flex gap-1">
+                        <form method="post" action="${escapeHtml(apt.confirm_url)}">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${escapeHtml(csrfToken)}">
+                            <input type="hidden" name="status" value="confirmed">
+                            <button class="btn btn-success btn-sm"><i class="bi bi-check-lg"></i></button>
+                        </form>
+                        <form method="post" action="${escapeHtml(apt.confirm_url)}">
+                            <input type="hidden" name="csrfmiddlewaretoken" value="${escapeHtml(csrfToken)}">
+                            <input type="hidden" name="status" value="cancelled">
+                            <button class="btn btn-danger btn-sm"><i class="bi bi-x-lg"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderFeedback(items) {
+        if (!items.length) {
+            feedbackList.innerHTML = '<p class="text-muted small text-center py-2" id="counselor-feedback-empty">No feedback yet</p>';
+            return;
+        }
+
+        feedbackList.innerHTML = items.map((fb) => `
+            <div class="mb-3 p-2 bg-light rounded-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="fw-semibold small">${escapeHtml(fb.student_name)}</span>
+                    <span>${stars(fb.rating)}</span>
+                </div>
+                <p class="text-muted small mb-0">${escapeHtml(fb.comment || 'No comment').slice(0, 90)}</p>
+            </div>
+        `).join('');
+    }
+
+    async function refreshDashboard() {
+        try {
+            const response = await fetch(endpoint, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (!response.ok) return;
+
+            const data = await response.json();
+            totalEl.textContent = data.totals.total_appointments;
+            ratingEl.textContent = data.totals.avg_rating;
+            studentsEl.textContent = data.totals.students_helped;
+            pendingEl.textContent = data.totals.pending;
+            confirmedEl.textContent = data.totals.confirmed;
+            completedEl.textContent = data.totals.completed;
+            unreadEl.textContent = data.totals.unread_messages;
+            completionEl.textContent = `${data.totals.completion_rate}%`;
+            syncedEl.textContent = data.updated_at;
+
+            if (data.totals.unread_messages > 0) {
+                unreadBadge.textContent = data.totals.unread_messages;
+                unreadBadge.classList.remove('d-none');
+            } else {
+                unreadBadge.classList.add('d-none');
+            }
+
+            renderPending(data.pending_appointments || []);
+            renderFeedback(data.recent_feedbacks || []);
+        } catch (error) {
+            console.error('Counselor dashboard refresh failed:', error);
+        }
+    }
+
+    refreshDashboard();
+    setInterval(refreshDashboard, 30000);
+})();
+</script>
+{% endblock %}

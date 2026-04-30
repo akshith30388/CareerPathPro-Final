@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Messages - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h4 class="fw-bold mb-4"><i class="bi bi-chat-dots me-2 text-primary"></i>Messages</h4>
+
+    {% if contacts_data %}
+    <div class="row g-3">
+        {% for item in contacts_data %}
+        <div class="col-md-6">
+            <a href="{% url 'chat:conversation' item.contact.pk %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-4 {% if item.unread > 0 %}border-start border-primary border-3{% endif %} hover-shadow">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle me-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:50px;height:50px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#ffd700;font-weight:bold;font-size:1.2rem;">
+                                {{ item.contact.username|first|upper }}
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <p class="mb-0 fw-semibold text-dark">
+                                        {{ item.contact.get_full_name|default:item.contact.username }}
+                                        <span class="badge {% if item.contact.role == 'counselor' %}bg-success{% else %}bg-primary{% endif %} ms-1 small">
+                                            {{ item.contact.get_role_display }}
+                                        </span>
+                                    </p>
+                                    {% if item.unread > 0 %}
+                                    <span class="badge bg-danger rounded-pill">{{ item.unread }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if item.last_msg %}
+                                <p class="text-muted small mb-0 text-truncate">
+                                    {% if item.last_msg.sender == request.user %}<span class="text-primary">You:</span>{% endif %}
+                                    {{ item.last_msg.content|truncatechars:50 }}
+                                </p>
+                                <p class="text-muted" style="font-size:0.7rem;">{{ item.last_msg.timestamp|date:"M d, g:i A" }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-chat-square-text text-muted" style="font-size:4rem;"></i>
+        <h5 class="fw-bold mt-3">No Conversations Yet</h5>
+        <p class="text-muted">Your messages with counselors will appear here.</p>
+        {% if user.role == 'student' %}
+        <a href="{% url 'appointments:book' %}" class="btn btn-primary px-4">
+            <i class="bi bi-calendar-plus me-2"></i>Book a Session First
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

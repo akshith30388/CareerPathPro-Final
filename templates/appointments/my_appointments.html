@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold"><i class="bi bi-calendar-check me-2 text-primary"></i>My Appointments</h4>
+        <a href="{% url 'appointments:book' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Book New Session
+        </a>
+    </div>
+
+    {% if appointments %}
+    <div class="row g-4">
+        {% for apt in appointments %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0">Session with {{ apt.counselor.get_full_name|default:apt.counselor.username }}</h6>
+                            <p class="text-muted small mb-0">{{ apt.counselor.email }}</p>
+                        </div>
+                        <span class="badge
+                            {% if apt.status == 'confirmed' %}bg-success
+                            {% elif apt.status == 'pending' %}bg-warning text-dark
+                            {% elif apt.status == 'cancelled' %}bg-danger
+                            {% else %}bg-secondary{% endif %} px-3">
+                            {{ apt.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3">
+                                <p class="text-muted small mb-0"><i class="bi bi-calendar me-1"></i>Date</p>
+                                <p class="fw-semibold small mb-0">{{ apt.date|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 bg-light rounded-3">
+                                <p class="text-muted small mb-0"><i class="bi bi-clock me-1"></i>Time</p>
+                                <p class="fw-semibold small mb-0">{{ apt.get_time_slot_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if apt.notes %}
+                    <p class="text-muted small mb-2"><i class="bi bi-chat-left-text me-1"></i>{{ apt.notes|truncatechars:80 }}</p>
+                    {% endif %}
+                    {% if apt.counselor_notes %}
+                    <div class="alert alert-info py-2 small rounded-3 mb-2">
+                        <i class="bi bi-person-badge me-1"></i><strong>Counselor note:</strong> {{ apt.counselor_notes }}
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'chat:conversation' apt.counselor.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-chat-dots me-1"></i>Message
+                        </a>
+                        {% if apt.status == 'completed' %}
+                            {% if apt.feedback %}
+                            <span class="btn btn-outline-success btn-sm disabled">
+                                <i class="bi bi-star-fill me-1"></i>Feedback Given
+                            </span>
+                            {% else %}
+                            <a href="{% url 'appointments:feedback' apt.pk %}" class="btn btn-success btn-sm">
+                                <i class="bi bi-star me-1"></i>Give Feedback
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x text-muted" style="font-size:4rem;"></i>
+        <h5 class="fw-bold mt-3">No Appointments Yet</h5>
+        <p class="text-muted">Book your first counseling session to get started!</p>
+        <a href="{% url 'appointments:book' %}" class="btn btn-primary px-4">
+            <i class="bi bi-calendar-plus me-2"></i>Book Session
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

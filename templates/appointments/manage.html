@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Manage Appointments - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h4 class="fw-bold mb-4"><i class="bi bi-calendar2-check me-2 text-primary"></i>Manage Appointments</h4>
+
+    <!-- Filter tabs -->
+    <ul class="nav nav-pills mb-4" id="apt-tabs">
+        <li class="nav-item"><a class="nav-link active" href="#" data-filter="all">All</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="pending">Pending</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="confirmed">Confirmed</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="completed">Completed</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="cancelled">Cancelled</a></li>
+    </ul>
+
+    {% if appointments %}
+    <div class="row g-3">
+        {% for apt in appointments %}
+        <div class="col-12 apt-item" data-status="{{ apt.status }}">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle me-3 d-flex align-items-center justify-content-center"
+                                     style="width:46px;height:46px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#ffd700;font-weight:bold;">
+                                    {{ apt.student.username|first|upper }}
+                                </div>
+                                <div>
+                                    <p class="mb-0 fw-semibold">{{ apt.student.get_full_name|default:apt.student.username }}</p>
+                                    <p class="text-muted small mb-0">{{ apt.student.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-0 fw-semibold"><i class="bi bi-calendar me-1 text-primary"></i>{{ apt.date|date:"M d, Y" }}</p>
+                            <p class="text-muted small mb-0"><i class="bi bi-clock me-1"></i>{{ apt.get_time_slot_display }}</p>
+                            {% if apt.notes %}<p class="text-muted small mb-0 mt-1"><i class="bi bi-chat-left me-1"></i>{{ apt.notes|truncatechars:50 }}</p>{% endif %}
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <span class="badge
+                                {% if apt.status == 'confirmed' %}bg-success
+                                {% elif apt.status == 'pending' %}bg-warning text-dark
+                                {% elif apt.status == 'cancelled' %}bg-danger
+                                {% else %}bg-secondary{% endif %} px-3 py-2">
+                                {{ apt.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            {% if apt.status == 'pending' %}
+                            <div class="d-flex gap-1 justify-content-end">
+                                <form method="post" action="{% url 'appointments:update' apt.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="confirmed">
+                                    <button class="btn btn-success btn-sm" title="Confirm">
+                                        <i class="bi bi-check-lg"></i> Confirm
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'appointments:update' apt.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button class="btn btn-danger btn-sm" title="Cancel">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% elif apt.status == 'confirmed' %}
+                            <div class="d-flex gap-1 justify-content-end">
+                                <form method="post" action="{% url 'appointments:update' apt.pk %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status" value="completed">
+                                    <button class="btn btn-primary btn-sm">
+                                        <i class="bi bi-check-circle me-1"></i>Mark Done
+                                    </button>
+                                </form>
+                                <a href="{% url 'chat:conversation' apt.student.pk %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-chat-dots"></i>
+                                </a>
+                            </div>
+                            {% else %}
+                            <a href="{% url 'chat:conversation' apt.student.pk %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-chat-dots me-1"></i>Chat
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x text-muted" style="font-size:4rem;"></i>
+        <h5 class="fw-bold mt-3">No Appointments</h5>
+        <p class="text-muted">You have no appointment requests yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.apt-item').forEach(item => {
+            if (filter === 'all' || item.dataset.status === filter) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

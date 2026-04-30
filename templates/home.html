@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home - CareerPath Pro{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4a90d9 100%); min-height: 88vh; display:flex; align-items:center;">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-white">
+                <div class="badge bg-warning text-dark mb-3 px-3 py-2 rounded-pill fw-semibold">
+                    <i class="bi bi-star-fill me-1"></i> #1 Career Guidance Platform
+                </div>
+                <h1 class="display-4 fw-bold mb-4" style="line-height:1.2;">
+                    Discover Your<br>
+                    <span style="color:#ffd700;">Dream Career</span><br>
+                    Path Today
+                </h1>
+                <p class="lead mb-4" style="color:rgba(255,255,255,0.85); font-size:1.1rem;">
+                    Take AI-powered career assessments, get personalized recommendations,
+                    and connect with expert counselors — all in one platform.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard:redirect' %}" class="btn btn-warning btn-lg fw-bold px-4 shadow">
+                        <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{% url 'assessments:start' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-clipboard-check me-2"></i>Take Assessment
+                    </a>
+                    {% else %}
+                    <a href="{% url 'users:register' %}" class="btn btn-warning btn-lg fw-bold px-4 shadow">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+                    </a>
+                    <a href="{% url 'users:login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </a>
+                    {% endif %}
+                </div>
+                <!-- Stats Row -->
+                <div class="row mt-5 text-center">
+                    <div class="col-4">
+                        <h3 class="fw-bold" style="color:#ffd700;">500+</h3>
+                        <p class="small" style="color:rgba(255,255,255,0.7);">Students Guided</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="fw-bold" style="color:#ffd700;">50+</h3>
+                        <p class="small" style="color:rgba(255,255,255,0.7);">Expert Counselors</p>
+                    </div>
+                    <div class="col-4">
+                        <h3 class="fw-bold" style="color:#ffd700;">20+</h3>
+                        <p class="small" style="color:rgba(255,255,255,0.7);">Career Paths</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center d-none d-lg-block">
+                <div style="background:rgba(255,255,255,0.1); border-radius:20px; padding:40px; backdrop-filter:blur(10px);">
+                    <i class="bi bi-mortarboard" style="font-size:8rem; color:#ffd700;"></i>
+                    <div class="row mt-4 text-white text-start g-3">
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.15);">
+                                <i class="bi bi-clipboard-data fs-4" style="color:#ffd700;"></i>
+                                <p class="small mt-2 mb-0 fw-semibold">Career Assessment</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.15);">
+                                <i class="bi bi-robot fs-4" style="color:#ffd700;"></i>
+                                <p class="small mt-2 mb-0 fw-semibold">AI Recommendations</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.15);">
+                                <i class="bi bi-people fs-4" style="color:#ffd700;"></i>
+                                <p class="small mt-2 mb-0 fw-semibold">Expert Counseling</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.15);">
+                                <i class="bi bi-file-earmark-person fs-4" style="color:#ffd700;"></i>
+                                <p class="small mt-2 mb-0 fw-semibold">Resume Builder</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-primary fw-bold text-uppercase letter-spacing">Our Features</h6>
+            <h2 class="fw-bold">Everything You Need to<br><span class="text-primary">Launch Your Career</span></h2>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-clipboard-check" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">Career Assessment</h5>
+                        <p class="text-muted">Take comprehensive MCQ-based aptitude, interest, and personality tests to understand your strengths.</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'assessments:start' %}" class="btn btn-primary btn-sm">Start Now</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-robot" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">AI Career Matching</h5>
+                        <p class="text-muted">Our intelligent engine analyzes your results and matches you with the most suitable career paths.</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'recommendations:list' %}" class="btn btn-primary btn-sm">View Matches</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-calendar-check" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">Expert Counseling</h5>
+                        <p class="text-muted">Book one-on-one sessions with certified career counselors who guide you at every step.</p>
+                        {% if user.is_authenticated %}
+                        <a href="{% url 'appointments:book' %}" class="btn btn-primary btn-sm">Book Session</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-chat-dots" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">Real-time Chat</h5>
+                        <p class="text-muted">Communicate directly with your counselor through our built-in messaging system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-file-earmark-person" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">Resume Builder</h5>
+                        <p class="text-muted">Create a professional resume with our easy-to-use builder and generate a print-ready preview.</p>
+                        {% if user.is_authenticated and user.role == 'student' %}
+                        <a href="{% url 'dashboard:resume_builder' %}" class="btn btn-primary btn-sm">Build Resume</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 card-hover">
+                    <div class="card-body p-4 text-center">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-map" style="font-size:3rem; color:#1e3c72;"></i>
+                        </div>
+                        <h5 class="fw-bold">Skill Roadmaps</h5>
+                        <p class="text-muted">Get detailed step-by-step roadmaps for each career path so you know exactly what to learn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h6 class="text-primary fw-bold text-uppercase">Process</h6>
+            <h2 class="fw-bold">How It Works</h2>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">1</div>
+                <h6 class="fw-bold">Create Account</h6>
+                <p class="text-muted small">Register as a student and set up your profile</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">2</div>
+                <h6 class="fw-bold">Take Assessment</h6>
+                <p class="text-muted small">Complete our comprehensive career assessment test</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">3</div>
+                <h6 class="fw-bold">Get Recommendations</h6>
+                <p class="text-muted small">Receive AI-powered personalized career matches</p>
+            </div>
+            <div class="col-md-3">
+                <div class="step-circle mx-auto mb-3">4</div>
+                <h6 class="fw-bold">Talk to Counselor</h6>
+                <p class="text-muted small">Book sessions with experts for personalized guidance</p>
+            </div>
+        </div>
+        {% if not user.is_authenticated %}
+        <div class="text-center mt-5">
+            <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg px-5 fw-bold shadow">
+                <i class="bi bi-arrow-right-circle me-2"></i>Start Your Journey
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+

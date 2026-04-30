@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="card border-0 rounded-4 mb-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+        <div class="card-body p-4 text-white">
+            <h4 class="fw-bold mb-1"><i class="bi bi-shield-check me-2"></i>Admin Analytics Dashboard</h4>
+            <p class="mb-0" style="color:rgba(255,255,255,0.8);">Platform overview and statistics</p>
+        </div>
+    </div>
+
+    <!-- Main Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3" style="border-left:4px solid #1e3c72 !important;">
+                <i class="bi bi-mortarboard text-primary" style="font-size:2.5rem;"></i>
+                <h3 class="fw-bold mt-2">{{ total_students }}</h3>
+                <p class="text-muted small mb-0">Total Students</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-person-badge text-success" style="font-size:2.5rem;"></i>
+                <h3 class="fw-bold mt-2">{{ total_counselors }}</h3>
+                <p class="text-muted small mb-0">Total Counselors</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-calendar-check text-warning" style="font-size:2.5rem;"></i>
+                <h3 class="fw-bold mt-2">{{ total_appointments }}</h3>
+                <p class="text-muted small mb-0">Total Appointments</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center p-3">
+                <i class="bi bi-clipboard-data text-info" style="font-size:2.5rem;"></i>
+                <h3 class="fw-bold mt-2">{{ total_assessments }}</h3>
+                <p class="text-muted small mb-0">Assessments Taken</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Appointment Status Breakdown -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0">
+                    <h6 class="fw-bold"><i class="bi bi-pie-chart me-2 text-primary"></i>Appointment Status</h6>
+                </div>
+                <div class="card-body px-4">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small fw-semibold">Pending</span>
+                            <span class="badge bg-warning text-dark">{{ appointment_stats.pending }}</span>
+                        </div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-warning" style="width:{% if total_appointments %}{% widthratio appointment_stats.pending total_appointments 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small fw-semibold">Confirmed</span>
+                            <span class="badge bg-success">{{ appointment_stats.confirmed }}</span>
+                        </div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-success" style="width:{% if total_appointments %}{% widthratio appointment_stats.confirmed total_appointments 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small fw-semibold">Completed</span>
+                            <span class="badge bg-primary">{{ appointment_stats.completed }}</span>
+                        </div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-primary" style="width:{% if total_appointments %}{% widthratio appointment_stats.completed total_appointments 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="small fw-semibold">Cancelled</span>
+                            <span class="badge bg-danger">{{ appointment_stats.cancelled }}</span>
+                        </div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar bg-danger" style="width:{% if total_appointments %}{% widthratio appointment_stats.cancelled total_appointments 100 %}{% else %}0{% endif %}%"></div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3 p-2 bg-light rounded-3">
+                        <p class="mb-0 text-muted small">Average Session Rating</p>
+                        <h4 class="fw-bold text-warning mb-0">⭐ {{ avg_feedback }}/5.0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Career Paths -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0">
+                    <h6 class="fw-bold"><i class="bi bi-trophy me-2 text-warning"></i>Most Popular Career Paths</h6>
+                </div>
+                <div class="card-body px-4">
+                    {% for career in top_careers %}
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3 fw-bold text-primary" style="width:20px;">{{ forloop.counter }}</div>
+                        <div class="flex-grow-1">
+                            <p class="mb-0 fw-semibold small">{{ career.recommended_career }}</p>
+                            <div class="progress mt-1" style="height:6px;">
+                                <div class="progress-bar" style="width:{{ career.count|floatformat:0 }}0%;background:linear-gradient(135deg,#1e3c72,#2a5298);"></div>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary ms-2">{{ career.count }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-bar-chart text-muted" style="font-size:2.5rem;"></i>
+                        <p class="text-muted small mt-2">No data yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-grid me-2 text-primary"></i>Admin Actions</h6>
+                    <div class="d-grid gap-2">
+                        <a href="/admin/users/customuser/" class="btn btn-outline-primary">
+                            <i class="bi bi-people me-2"></i>Manage Users
+                        </a>
+                        <a href="/admin/assessments/assessmentquestion/" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard me-2"></i>Manage Questions
+                        </a>
+                        <a href="/admin/appointments/appointment/" class="btn btn-outline-primary">
+                            <i class="bi bi-calendar me-2"></i>View Appointments
+                        </a>
+                        <a href="/admin/" class="btn btn-primary">
+                            <i class="bi bi-shield-check me-2"></i>Django Admin Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Students -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-3 px-4 pb-0">
+                    <h6 class="fw-bold"><i class="bi bi-people me-2 text-primary"></i>Recent Students</h6>
+                </div>
+                <div class="card-body px-2">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="px-4">Student</th>
+                                    <th>Email</th>
+                                    <th>Joined</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in recent_students %}
+                                <tr>
+                                    <td class="px-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle me-2 d-flex align-items-center justify-content-center"
+                                                 style="width:36px;height:36px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#ffd700;font-weight:bold;font-size:14px;">
+                                                {{ student.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <p class="mb-0 fw-semibold small">{{ student.get_full_name|default:student.username }}</p>
+                                                <p class="text-muted small mb-0">@{{ student.username }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="small">{{ student.email }}</td>
+                                    <td class="small">{{ student.date_joined|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center py-3 text-muted">No students registered yet</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

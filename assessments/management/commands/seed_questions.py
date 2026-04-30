@@ -1,0 +1,146 @@
+from django.core.management.base import BaseCommand
+from assessments.models import AssessmentQuestion
+
+
+class Command(BaseCommand):
+    help = 'Seed sample career assessment questions'
+
+    def handle(self, *args, **kwargs):
+        AssessmentQuestion.objects.all().delete()
+
+        questions = [
+            # Aptitude Questions
+            {
+                'question_text': 'If a train travels 120 km in 2 hours, what is its speed?',
+                'option_a': '60 km/h', 'option_b': '50 km/h', 'option_c': '70 km/h', 'option_d': '80 km/h',
+                'correct_option': 'a', 'category': 'aptitude',
+                'option_a_career': 'Engineering', 'option_b_career': 'Business',
+                'option_c_career': 'Science', 'option_d_career': 'Technology', 'order': 1,
+            },
+            {
+                'question_text': 'Which is the odd one out: Apple, Mango, Carrot, Banana?',
+                'option_a': 'Apple', 'option_b': 'Mango', 'option_c': 'Carrot', 'option_d': 'Banana',
+                'correct_option': 'c', 'category': 'aptitude',
+                'option_a_career': 'Healthcare', 'option_b_career': 'Business',
+                'option_c_career': 'Science', 'option_d_career': 'Creative', 'order': 2,
+            },
+            {
+                'question_text': 'A program has a bug causing infinite loop. What skill helps fix it?',
+                'option_a': 'Creative writing', 'option_b': 'Debugging & logical reasoning',
+                'option_c': 'Public speaking', 'option_d': 'Financial analysis',
+                'correct_option': 'b', 'category': 'aptitude',
+                'option_a_career': 'Creative', 'option_b_career': 'Technology',
+                'option_c_career': 'Education', 'option_d_career': 'Business', 'order': 3,
+            },
+            {
+                'question_text': 'What does HTML stand for in web development?',
+                'option_a': 'Hyper Text Markup Language', 'option_b': 'High Text Modern Language',
+                'option_c': 'Hyperlink Text Making Language', 'option_d': 'Home Text Markup Layout',
+                'correct_option': 'a', 'category': 'aptitude',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Business', 'option_d_career': 'Science', 'order': 4,
+            },
+            {
+                'question_text': 'Which of the following is a data structure?',
+                'option_a': 'Algorithm', 'option_b': 'Stack', 'option_c': 'Compiler', 'option_d': 'Browser',
+                'correct_option': 'b', 'category': 'aptitude',
+                'option_a_career': 'Technology', 'option_b_career': 'Technology',
+                'option_c_career': 'Engineering', 'option_d_career': 'Business', 'order': 5,
+            },
+            # Interest Questions
+            {
+                'question_text': 'Which activity do you enjoy most in your free time?',
+                'option_a': 'Coding or building apps', 'option_b': 'Drawing, painting, or designing',
+                'option_c': 'Reading science books or doing experiments', 'option_d': 'Organizing events and managing people',
+                'correct_option': 'a', 'category': 'interest',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Business', 'order': 6,
+            },
+            {
+                'question_text': 'What type of problems do you enjoy solving?',
+                'option_a': 'Mathematical and logical puzzles', 'option_b': 'Design and aesthetic challenges',
+                'option_c': 'Biological or chemical experiments', 'option_d': 'Business strategies and planning',
+                'correct_option': 'a', 'category': 'interest',
+                'option_a_career': 'Engineering', 'option_b_career': 'Creative',
+                'option_c_career': 'Healthcare', 'option_d_career': 'Business', 'order': 7,
+            },
+            {
+                'question_text': 'Which subject do you find most exciting?',
+                'option_a': 'Computer Science / Programming', 'option_b': 'Fine Arts / Literature',
+                'option_c': 'Biology / Chemistry', 'option_d': 'Economics / Commerce',
+                'correct_option': 'a', 'category': 'interest',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Business', 'order': 8,
+            },
+            {
+                'question_text': 'If you could choose a job today, which would you pick?',
+                'option_a': 'Software Engineer at a tech company', 'option_b': 'Graphic Designer for a creative agency',
+                'option_c': 'Medical researcher in a lab', 'option_d': 'Business consultant for companies',
+                'correct_option': 'a', 'category': 'interest',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Healthcare', 'option_d_career': 'Business', 'order': 9,
+            },
+            {
+                'question_text': 'What kind of projects excite you most?',
+                'option_a': 'Building a mobile app or website', 'option_b': 'Creating a brand identity or logo',
+                'option_c': 'Conducting a scientific study', 'option_d': 'Launching and growing a startup',
+                'correct_option': 'a', 'category': 'interest',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Business', 'order': 10,
+            },
+            # Personality Questions
+            {
+                'question_text': 'How do you prefer to work?',
+                'option_a': 'Alone, focused on complex technical problems',
+                'option_b': 'Collaboratively in a creative team',
+                'option_c': 'In a structured lab or research environment',
+                'option_d': 'Leading a team towards business goals',
+                'correct_option': 'a', 'category': 'personality',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Business', 'order': 11,
+            },
+            {
+                'question_text': 'When faced with a difficult situation, you tend to:',
+                'option_a': 'Analyze data and find a systematic solution',
+                'option_b': 'Think creatively for an innovative approach',
+                'option_c': 'Research thoroughly before deciding',
+                'option_d': 'Consult and collaborate with others',
+                'correct_option': 'a', 'category': 'personality',
+                'option_a_career': 'Engineering', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Education', 'order': 12,
+            },
+            {
+                'question_text': 'Your friends would describe you as:',
+                'option_a': 'Logical and tech-savvy', 'option_b': 'Creative and artistic',
+                'option_c': 'Curious and analytical', 'option_d': 'Organized and leadership-oriented',
+                'correct_option': 'a', 'category': 'personality',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Business', 'order': 13,
+            },
+            {
+                'question_text': 'You feel most satisfied when you:',
+                'option_a': 'Build something functional that solves a real problem',
+                'option_b': 'Create something beautiful that inspires others',
+                'option_c': 'Discover something new through research',
+                'option_d': 'Help others grow and develop skills',
+                'correct_option': 'a', 'category': 'personality',
+                'option_a_career': 'Engineering', 'option_b_career': 'Creative',
+                'option_c_career': 'Science', 'option_d_career': 'Education', 'order': 14,
+            },
+            {
+                'question_text': 'What motivates you the most at work?',
+                'option_a': 'Solving complex technical challenges',
+                'option_b': 'Expressing creativity and artistic vision',
+                'option_c': 'Making a positive impact on health and society',
+                'option_d': 'Growing a business and achieving financial goals',
+                'correct_option': 'a', 'category': 'personality',
+                'option_a_career': 'Technology', 'option_b_career': 'Creative',
+                'option_c_career': 'Healthcare', 'option_d_career': 'Business', 'order': 15,
+            },
+        ]
+
+        for q_data in questions:
+            AssessmentQuestion.objects.create(**q_data)
+
+        self.stdout.write(self.style.SUCCESS(f'Successfully created {len(questions)} assessment questions!'))
+

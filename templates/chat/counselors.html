@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Browse Counselors - CareerPath Pro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold"><i class="bi bi-people me-2 text-primary"></i>Our Expert Counselors</h4>
+            <p class="text-muted small">Connect with certified career counselors</p>
+        </div>
+        <a href="{% url 'chat:inbox' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Inbox
+        </a>
+    </div>
+    <div class="row g-4">
+        {% for counselor in counselors %}
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4 text-center">
+                    <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
+                         style="width:70px;height:70px;background:linear-gradient(135deg,#134e5e,#71b280);color:white;font-size:1.8rem;font-weight:bold;">
+                        {{ counselor.username|first|upper }}
+                    </div>
+                    <h6 class="fw-bold">{{ counselor.get_full_name|default:counselor.username }}</h6>
+                    {% with profile=counselor.counselor_profile %}
+                    {% if profile %}
+                    <p class="text-muted small mb-1">{{ profile.specialization|default:"Career Counselor" }}</p>
+                    <p class="text-muted small mb-2">
+                        <i class="bi bi-briefcase me-1"></i>{{ profile.experience_years }} yrs experience
+                    </p>
+                    {% if profile.is_available %}
+                    <span class="badge bg-success mb-2"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>Available</span>
+                    {% else %}
+                    <span class="badge bg-secondary mb-2">Not Available</span>
+                    {% endif %}
+                    {% endif %}
+                    {% endwith %}
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'chat:conversation' counselor.pk %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-chat-dots me-1"></i>Send Message
+                        </a>
+                        <a href="{% url 'appointments:book' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-calendar-plus me-1"></i>Book Session
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size:4rem;"></i>
+            <h5 class="fw-bold mt-3">No Counselors Yet</h5>
+            <p class="text-muted">Counselors will appear here once they register.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
